@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authentication Features — Security Vulnerability Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E9EDF4;--panel:#FFFFFF;--navy:#101a2b;--navy-2:#1b2942;
+    --ink:#18222E;--ink-2:#57646F;--ink-3:#8995a3;--line:#DBE2EC;
+    --brand:#2C49D6;--brand-soft:#E7ECFC;--brand-ink:#1c2f9e;
+    --ok:#16916A;--ok-soft:#E1F2EB;--time:#B57414;--time-soft:#F6ECD8;
+    --rose:#C03B62;--rose-soft:#F8E4EC;
+    --display:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+    --r:14px;--shadow:0 1px 2px rgba(16,26,43,.04),0 10px 30px rgba(16,26,43,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased;padding:clamp(10px,1.4vw,18px)}
+  .wrap{max-width:none;margin:0 auto}
+
+  /* ---------- MASTHEAD + TABS ---------- */
+  .masthead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px;padding:0 4px}
+  .masthead .brand{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:9px}
+  .masthead .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(22,145,106,.22)}
+  .masthead .title{font-family:var(--display);font-weight:600;font-size:14px;color:var(--ink)}
+  .tabs{display:flex;gap:8px;background:#fff;border-radius:12px;padding:6px;box-shadow:var(--shadow);flex-wrap:wrap}
+  .tab{font-family:var(--display);font-weight:500;font-size:13px;cursor:pointer;border:0;background:transparent;color:var(--ink-2);padding:9px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:7px;transition:all .16s ease}
+  .tab b{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .tab[aria-selected="true"]{background:var(--brand);color:#fff}
+  .tab[aria-selected="true"] b{color:#cdd9ff}
+  .tab:hover:not([aria-selected="true"]){background:var(--brand-soft);color:var(--brand-ink)}
+  .tab:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+  /* ---------- FEATURE CONTAINER ---------- */
+  .feature[hidden]{display:none}
+  .feature.in{animation:fade .45s cubic-bezier(.2,.7,.3,1)}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  /* ---------- HERO ---------- */
+  .hero{background:radial-gradient(120% 140% at 88% -10%, #25407e 0%, rgba(37,64,126,0) 55%),linear-gradient(180deg,var(--navy-2) 0%, var(--navy) 100%);border-radius:calc(var(--r) + 6px);color:#eaf0fb;padding:clamp(16px,2.2vw,26px);position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .hero::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.045) 1px, transparent 1px);background-size:22px 22px;-webkit-mask-image:linear-gradient(120deg,#000,transparent 60%);mask-image:linear-gradient(120deg,#000,transparent 60%);pointer-events:none}
+  .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;position:relative;z-index:1}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#9fb4e6;display:flex;align-items:center;gap:10px}
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(22,145,106,.25)}
+  .series{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:#8da0cf;border:1px solid rgba(255,255,255,.14);padding:6px 11px;border-radius:999px;white-space:nowrap}
+  .series b{color:#fff;font-weight:700}
+  h1{font-family:var(--display);font-weight:600;font-size:clamp(22px,3vw,34px);line-height:1.05;letter-spacing:-.02em;margin:0 0 7px;position:relative;z-index:1}
+  h1 em{font-style:normal;color:#8fb0ff}
+  .lede{max-width:60ch;color:#bcc9e6;font-size:clamp(13px,1.3vw,15px);position:relative;z-index:1}
+  .deep-link{display:inline-flex;align-items:center;gap:10px;margin-top:14px;font-family:var(--display);font-weight:600;font-size:14px;text-decoration:none;color:var(--brand-ink);background:#fff;padding:11px 18px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.3);position:relative;z-index:1;transition:transform .15s ease, box-shadow .15s ease}
+  .deep-link:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.4)}
+  .deep-link:focus-visible{outline:2px solid #8fb0ff;outline-offset:3px}
+  .deep-link .ic{font-size:16px}
+  .deep-link .arr{transition:transform .15s ease}
+  .deep-link:hover .arr{transform:translateX(4px)}
+  .deep-link .ext{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);border-left:1px solid var(--line);padding-left:10px}
+
+  /* ---------- HERO LAYOUT ---------- */
+  .hero-main{display:flex;align-items:center;gap:clamp(18px,3vw,40px);margin-top:14px;position:relative;z-index:1}
+  .hero-copy{flex:1 1 50%;min-width:0}
+  .sig-rail{flex:0 1 440px;min-width:0}
+  .sig-rail.qr{flex:0 0 auto}
+
+  /* signature: token ticket (F1) */
+  .ticket{display:grid;grid-template-columns:auto 1fr auto;background:#fbfcff;color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.34);max-width:100%}
+  .ticket-stub{background:var(--ok);color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:16px 18px;gap:4px;text-align:center;min-width:96px}
+  .ticket-stub .check{font-size:22px;line-height:1}
+  .ticket-stub small{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.92}
+  .perf{width:2px;background-image:linear-gradient(var(--line) 55%, transparent 0);background-size:2px 12px;position:relative}
+  .perf::before,.perf::after{content:"";position:absolute;left:50%;transform:translateX(-50%);width:14px;height:14px;border-radius:50%;background:var(--navy)}
+  .perf::before{top:-7px}.perf::after{bottom:-7px}
+  .ticket-body{padding:14px 18px;min-width:0}
+  .ticket-body .label{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .ticket-body .token{font-family:var(--mono);font-weight:500;font-size:15px;color:var(--brand-ink);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ticket-body .meta{display:flex;gap:14px;margin-top:9px;flex-wrap:wrap}
+  .ticket-body .meta span{font-family:var(--mono);font-size:11px;color:var(--ink-2);display:flex;align-items:center;gap:5px}
+  .ticket-body .meta .clock{color:var(--time)}
+  .ticket-send{display:flex;align-items:center;justify-content:center;padding:0 14px;border-left:1px dashed var(--line)}
+  .send-svg{width:54px;height:40px;display:block}
+  .send-path{stroke:var(--brand);stroke-width:2;fill:none;stroke-dasharray:4 4}
+  .send-dot{fill:var(--brand)}
+
+  /* signature: OAuth credentials card (F2) */
+  .cred{background:#fbfcff;color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.34)}
+  .cred-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .gmark{width:22px;height:22px;border-radius:50%;flex:0 0 auto;background:conic-gradient(from -45deg,#ea4335 0 25%,#fbbc05 0 50%,#34a853 0 75%,#4285f4 0 100%);-webkit-mask:radial-gradient(circle 5px at 50% 50%,transparent 98%,#000);mask:radial-gradient(circle 5px at 50% 50%,transparent 98%,#000)}
+  .cred-head .id{margin-left:auto;color:var(--brand-ink);text-transform:none;letter-spacing:0}
+  .keyrow{display:flex;align-items:center;gap:12px;padding:12px 16px}
+  .keyrow + .keyrow{border-top:1px dashed var(--line)}
+  .keyrow .kicon{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .keyrow .kicon.pub{background:var(--brand-soft)}
+  .keyrow .kicon.priv{background:var(--rose-soft)}
+  .keyrow .ktext{min-width:0}
+  .keyrow .kname{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .keyrow .ktag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+  .keyrow .ktag.pub{color:var(--brand-ink)}
+  .keyrow .ktag.priv{color:var(--rose)}
+
+  /* signature: Turnstile widget (F3) */
+  .widget{background:#fbfcff;border:1px solid #e4e9f2;border-radius:12px;box-shadow:0 14px 34px rgba(0,0,0,.34);padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .widget .checkbox{width:30px;height:30px;border-radius:7px;flex:0 0 auto;background:var(--ok);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;position:relative}
+  .widget .checkbox .ring{position:absolute;inset:-6px;border-radius:11px;border:2px solid var(--ok);opacity:.4;animation:pulse 2.4s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(.85);opacity:.5}70%{transform:scale(1.15);opacity:0}100%{opacity:0}}
+  .widget .wtext{flex:1;min-width:0}
+  .widget .wtext b{font-family:var(--display);font-weight:600;font-size:15px;color:var(--ink)}
+  .widget .wtext small{display:block;font-size:12px;color:var(--ink-2);margin-top:1px}
+  .widget .wbrand{display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;opacity:.85}
+  .widget .wbrand .cf{width:26px;height:26px;border-radius:50%;background:linear-gradient(180deg,#f6821f,#fbad41);box-shadow:0 2px 6px rgba(246,130,31,.4)}
+  .widget .wbrand small{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+
+  /* signature: QR card (F4) */
+  .qr-card{background:#fbfcff;border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.34);padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;width:200px}
+  .qr-card svg{width:130px;height:130px;display:block;color:var(--navy)}
+  .qr-card .scan{font-family:var(--display);font-weight:600;font-size:14px;color:var(--ink)}
+  .qr-chip{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--time);background:var(--time-soft);padding:4px 10px;border-radius:999px}
+  .qr-scanline{animation:scan 2.6s ease-in-out infinite;transform-origin:center}
+  @keyframes scan{0%,100%{transform:translateY(-46px);opacity:.15}50%{transform:translateY(46px);opacity:.7}}
+
+  /* ---------- PANELS ---------- */
+  .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px}
+  .panel{background:var(--panel);border-radius:calc(var(--r) + 4px);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);border:1px solid #fff}
+  .panel-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .panel-tag{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--brand-ink);background:var(--brand-soft);padding:5px 10px;border-radius:7px}
+  .panel h2{font-family:var(--display);font-weight:600;font-size:clamp(19px,2.4vw,24px);letter-spacing:-.01em}
+  .panel-sub{color:var(--ink-2);font-size:14px;margin:6px 0 20px}
+
+  /* ---------- FLOW STEPS ---------- */
+  .flow{list-style:none;position:relative}
+  .flow::before{content:"";position:absolute;left:17px;top:8px;bottom:8px;width:2px;background:linear-gradient(var(--brand),var(--ok));opacity:.28}
+  .step{position:relative;padding:0 0 20px 52px}
+  .step:last-child{padding-bottom:0}
+  .step .num{position:absolute;left:0;top:0;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:14px;color:#fff;background:var(--brand);box-shadow:0 4px 12px rgba(44,73,214,.3);z-index:1}
+  .step.s-time .num{background:var(--time);box-shadow:0 4px 12px rgba(181,116,20,.3)}
+  .step.s-key .num{background:var(--rose);box-shadow:0 4px 12px rgba(192,59,98,.3)}
+  .step.s-ok .num{background:var(--ok);box-shadow:0 4px 12px rgba(22,145,106,.3)}
+  .step h3{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:-.01em;margin-bottom:3px}
+  .step p{font-size:14px;color:var(--ink-2)}
+  .step p code,.inline-code{font-family:var(--mono);font-size:12.5px;background:#eef1f7;color:var(--brand-ink);padding:1px 6px;border-radius:5px}
+  .step .pill{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:4px 9px;border-radius:999px}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)}
+  .pill.time{background:var(--time-soft);color:var(--time)}
+  .pill.pub{background:var(--brand-soft);color:var(--brand-ink)}
+  .pill.key{background:var(--rose-soft);color:var(--rose)}
+
+  /* ---------- SETUP PANEL ---------- */
+  .toggle{display:inline-flex;background:#eef1f7;border-radius:10px;padding:4px;gap:4px;margin-bottom:18px}
+  .t-btn{font-family:var(--display);font-weight:500;font-size:13.5px;cursor:pointer;border:0;background:transparent;color:var(--ink-2);padding:8px 16px;border-radius:7px;transition:all .18s ease}
+  .t-btn[aria-selected="true"]{background:#fff;color:var(--brand-ink);box-shadow:0 1px 4px rgba(16,26,43,.12)}
+  .t-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .setup-list{list-style:none;counter-reset:s;margin-bottom:18px}
+  .setup-list li{position:relative;padding:7px 0 7px 30px;font-size:14px;color:var(--ink);border-bottom:1px solid var(--line)}
+  .setup-list li:last-child{border-bottom:0}
+  .setup-list li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:8px;width:20px;height:20px;border-radius:6px;background:var(--brand-soft);color:var(--brand-ink);font-family:var(--mono);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .setup-list strong{font-weight:600}
+  .env[hidden]{display:none}
+  .env{background:var(--navy);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  .env-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .env-bar .fname{font-family:var(--mono);font-size:12px;color:#aebbd6;margin-left:6px}
+  .env-bar .where{margin-left:auto;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#6f80a3}
+  .dotrow{display:flex;gap:6px}
+  .dotrow i{width:10px;height:10px;border-radius:50%;display:block}
+  .dotrow i:nth-child(1){background:#ff5f57}.dotrow i:nth-child(2){background:#febc2e}.dotrow i:nth-child(3){background:#28c840}
+  .env-body{padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.85;color:#dbe3f4;overflow-x:auto}
+  .env-body .k{color:#7fd1ff}.env-body .eq{color:#6f80a3}.env-body .v{color:#ffd479}.env-body .c{color:#5f7197;font-style:italic}.env-body .secret{color:#ff9bb6}
+  .note{display:flex;gap:10px;margin-top:14px;padding:12px 14px;border-radius:10px;font-size:13px}
+  .note.amber{background:var(--time-soft);color:#7a5410}.note.amber b{color:#5e3f08}
+  .note.green{background:var(--ok-soft);color:#0c5a41}.note.green b{color:#08402e}
+  .note .ic{flex:0 0 auto}
+
+  /* ---------- FOOTER + PAGER ---------- */
+  .foot{margin-top:14px;padding:14px 20px;border-radius:var(--r);background:var(--panel);box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+  .foot .vars{display:flex;gap:8px;flex-wrap:wrap}
+  .foot .vars code{font-family:var(--mono);font-size:11.5px;background:#eef1f7;color:var(--brand-ink);padding:4px 8px;border-radius:6px}
+  .foot .vars .ok-code{background:var(--ok-soft);color:#0c5a41}
+  .foot .lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+  .pager{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px}
+  .prev-btn{font-family:var(--display);font-weight:500;font-size:14px;cursor:pointer;border:0;background:transparent;color:var(--ink-2);padding:10px 6px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;transition:color .15s ease}
+  .prev-btn:hover{color:var(--brand-ink)}
+  .prev-btn:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+  .pager .spacer{flex:1}
+  .next-btn{cursor:pointer;border:0;display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:15px;color:#fff;background:var(--brand);padding:13px 22px;border-radius:12px;box-shadow:0 6px 18px rgba(44,73,214,.32);transition:transform .15s ease, box-shadow .15s ease}
+  .next-btn.restart{background:#34465f;box-shadow:0 6px 18px rgba(52,70,95,.3)}
+  .next-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(44,73,214,.42)}
+  .next-btn.restart:hover{box-shadow:0 10px 24px rgba(52,70,95,.42)}
+  .next-btn:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
+  .next-btn .arrow,.next-btn .ico{transition:transform .15s ease}
+  .next-btn:hover .arrow{transform:translateX(4px)}
+
+  /* ---------- REVEAL + RESPONSIVE ---------- */
+  .reveal{opacity:0;transform:translateY(10px);animation:rise .55s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .d1{animation-delay:.05s}.d2{animation-delay:.12s}.d3{animation-delay:.2s}
+  @media (max-width:860px){
+    .hero-main{flex-direction:column;align-items:stretch;gap:16px}
+    .sig-rail{flex:1 1 auto}.sig-rail.qr{align-self:center}
+    .grid{grid-template-columns:1fr}
+    .ticket-send{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal,.feature.in{animation:none;opacity:1;transform:none}
+    .send-dot,.widget .checkbox .ring,.qr-scanline{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <div class="masthead">
+    <span class="brand"><span class="dot"></span>Security Vulnerability Lab</span>
+    <nav class="tabs" role="tablist" aria-label="Authentication features">
+      <button class="tab" role="tab" data-goto="0" aria-selected="true"><b>01</b> Email</button>
+      <button class="tab" role="tab" data-goto="1" aria-selected="false"><b>02</b> Google</button>
+      <button class="tab" role="tab" data-goto="2" aria-selected="false"><b>03</b> CAPTCHA</button>
+      <button class="tab" role="tab" data-goto="3" aria-selected="false"><b>04</b> QR Login</button>
+    </nav>
+  </div>
+
+  <!-- ============ FEATURE 01 — EMAIL VERIFICATION ============ -->
+  <section class="feature in" data-feature="0">
+    <header class="hero reveal d1">
+      <div class="hero-top">
+        <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
+        <span class="series">Feature <b>01</b> / 04 · Email Verification</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1>Prove the email is <em>real</em> before the account is.</h1>
+          <p class="lede">On sign-up the app mints a one-time token, mails a link through SendGrid's HTTPS API, and only activates the account once that link is clicked — before the token expires.</p>
+        </div>
+        <div class="sig-rail">
+          <div class="ticket" role="img" aria-label="A verification token ticket: status pending, expires in one hour, sent by email">
+            <div class="ticket-stub"><span class="check">✓</span><small>Verify</small></div>
+            <div class="perf" aria-hidden="true"></div>
+            <div class="ticket-body">
+              <div class="label">Verification token</div>
+              <div class="token">a7f3c9e1‑4b80‑11ef‑pending</div>
+              <div class="meta"><span class="clock">⏱ expires · 1h TTL</span><span>↳ /verify?token=…</span></div>
+            </div>
+            <div class="ticket-send" aria-hidden="true">
+              <svg class="send-svg" viewBox="0 0 54 40">
+                <path id="sp" class="send-path" d="M2 30 C 16 30, 18 8, 30 8 S 50 20, 52 10"/>
+                <circle class="send-dot" r="3"><animateMotion dur="2.6s" repeatCount="indefinite" rotate="auto"><mpath href="#sp"/></animateMotion></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel reveal d2">
+        <div class="panel-head"><span class="panel-tag">What happens</span></div>
+        <h2>The verification flow</h2>
+        <p class="panel-sub">The path a brand-new account takes from sign-up to verified — at the abstract level.</p>
+        <ol class="flow">
+          <li class="step"><span class="num">1</span><h3>User submits the sign-up form</h3><p>They type an email address and choose to create an account. The account exists but is marked <strong>unverified</strong>.</p></li>
+          <li class="step s-time"><span class="num">2</span><h3>The app mints a token</h3><p>A unique, hard-to-guess verification token is generated and stored against the account with an <strong>expiry timestamp</strong>.</p><span class="pill time">⏱ default lifetime: 1 hour</span></li>
+          <li class="step"><span class="num">3</span><h3>SendGrid mails the link</h3><p>The app calls SendGrid's <strong>HTTPS API</strong> — not SMTP — to send an email containing <code>APP_BASE_URL</code> + the token. (HTTPS is used because hosts like Render block outbound SMTP.)</p></li>
+          <li class="step"><span class="num">4</span><h3>User clicks the link</h3><p>Opening the link in their browser hits the verify endpoint and hands back the token from the email.</p></li>
+          <li class="step s-time"><span class="num">5</span><h3>The endpoint checks the token</h3><p>It looks the token up, confirms it exists and <strong>has not expired</strong>. An expired or unknown token is rejected — the user can request a fresh one.</p></li>
+          <li class="step s-ok"><span class="num">✓</span><h3>Account marked verified</h3><p>The token is consumed and the account flips to <strong>verified</strong>. The email address is now proven to belong to the user.</p><span class="pill ok">● status: verified</span></li>
+        </ol>
+      </section>
+
+      <section class="panel reveal d3">
+        <div class="panel-head"><span class="panel-tag">What you do</span></div>
+        <h2>Run it yourself</h2>
+        <p class="panel-sub">Three values turn email on. Get them once from SendGrid, then point them at wherever the app runs.</p>
+        <ol class="setup-list">
+          <li><strong>Create a free SendGrid account.</strong></li>
+          <li><strong>Verify a Single Sender</strong> — prove you own the <em>From</em> address (or verify a whole domain).</li>
+          <li>In SendGrid: <strong>Settings → API Keys → Create API Key</strong> with <em>Mail Send</em> permission.</li>
+          <li>Drop the three values into the right place for your environment ↓</li>
+        </ol>
+        <div class="toggle" role="tablist" aria-label="Where you are running the app">
+          <button class="t-btn" role="tab" data-target="local" aria-selected="true">Local machine</button>
+          <button class="t-btn" role="tab" data-target="render" aria-selected="false">Render.com</button>
+        </div>
+        <div class="env" data-env="local">
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">.env</span><span class="where">copied from .env.example</span></div>
+          <div class="env-body"><span class="c"># your real .env is git-ignored — never commit it</span><br><span class="k">SENDGRID_API_KEY</span><span class="eq">=</span><span class="secret">SG.your-sendgrid-api-key</span><br><span class="k">SENDGRID_FROM</span><span class="eq">=</span><span class="v">your-verified@example.com</span><br><span class="k">APP_BASE_URL</span><span class="eq">=</span><span class="v">http://localhost:3001</span></div>
+        </div>
+        <div class="env" data-env="render" hidden>
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">Service → Environment</span><span class="where">no .env uploaded</span></div>
+          <div class="env-body"><span class="c"># add each as a key / value in the dashboard</span><br><span class="k">SENDGRID_API_KEY</span><span class="eq"> → </span><span class="secret">SG.your-sendgrid-api-key</span><br><span class="k">SENDGRID_FROM</span><span class="eq"> → </span><span class="v">your-verified@example.com</span><br><span class="k">APP_BASE_URL</span><span class="eq"> → </span><span class="v">https://your-app.onrender.com</span></div>
+        </div>
+        <div class="note amber"><span class="ic">⚠️</span><span><b>APP_BASE_URL</b> builds the link inside the email, so it must match where the app actually runs (no trailing slash). Leave all three unset and sign-up simply shows a friendly “email not configured” message.</span></div>
+      </section>
+    </div>
+
+    <footer class="foot reveal d3">
+      <div><div class="lab">Required variables</div><div class="vars" style="margin-top:8px"><code>SENDGRID_API_KEY</code><code>SENDGRID_FROM</code><code>APP_BASE_URL</code></div></div>
+      <div style="text-align:right"><div class="lab">Optional</div><div class="vars" style="margin-top:8px;justify-content:flex-end"><code>EMAIL_VERIFICATION_TTL_SECONDS=3600</code></div></div>
+    </footer>
+
+    <nav class="pager">
+      <span class="spacer"></span>
+      <button class="next-btn" data-goto="1">Next: Continue with Google <span class="arrow">→</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ FEATURE 02 — CONTINUE WITH GOOGLE ============ -->
+  <section class="feature" data-feature="1" hidden>
+    <header class="hero reveal d1">
+      <div class="hero-top">
+        <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
+        <span class="series">Feature <b>02</b> / 04 · Continue with Google</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1>Let Google <em>vouch</em> for who's logging in.</h1>
+          <p class="lede">The user authenticates on Google's own page, then the app trusts Google's answer — the <strong>public Client ID</strong> rides along in the browser, while the <strong>private Client Secret</strong> never leaves the server.</p>
+          <a class="deep-link" href="https://arifpucit.github.io/oauth-demo/" target="_blank" rel="noopener"><span class="ic">📘</span> Explore the interactive OAuth 2.0 demo <span class="arr">→</span><span class="ext">External</span></a>
+        </div>
+        <div class="sig-rail">
+          <div class="cred" role="img" aria-label="OAuth client credentials: a public Client ID used in the browser, and a private Client Secret used only on the server">
+            <div class="cred-head"><span class="gmark" aria-hidden="true"></span>OAuth client<span class="id">Web application</span></div>
+            <div class="keyrow"><span class="kicon pub" aria-hidden="true">🌐</span><div class="ktext"><div class="kname">client_id …apps.googleusercontent.com</div><div class="ktag pub">Public · travels in the browser</div></div></div>
+            <div class="keyrow"><span class="kicon priv" aria-hidden="true">🔒</span><div class="ktext"><div class="kname">client_secret ••••••••••••</div><div class="ktag priv">Private · server only</div></div></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel reveal d2">
+        <div class="panel-head"><span class="panel-tag">What happens</span></div>
+        <h2>The OAuth sign-in flow</h2>
+        <p class="panel-sub">The authorization-code dance between the app, the browser, and Google — and where each key is used.</p>
+        <ol class="flow">
+          <li class="step"><span class="num">1</span><h3>User clicks “Continue with Google”</h3><p>The app redirects the browser to Google, putting the <strong>public Client ID</strong> and the registered <code>redirect_uri</code> in the URL. No secret here — this part is openly visible in the browser.</p><span class="pill pub">🌐 public Client ID — identifies the app</span></li>
+          <li class="step"><span class="num">2</span><h3>User signs in &amp; consents at Google</h3><p>They authenticate on Google's own page and approve access. The app <strong>never sees their Google password</strong>.</p></li>
+          <li class="step"><span class="num">3</span><h3>Google redirects back with a code</h3><p>The browser is sent to your exact <code>redirect_uri</code> carrying a short-lived, one-time <strong>authorization code</strong>.</p></li>
+          <li class="step s-key"><span class="num">4</span><h3>Server swaps the code for tokens</h3><p>Server-to-server, the app sends the code <strong>plus the private Client Secret</strong> to Google. The secret proves the request is really from your app — it never touches the browser.</p><span class="pill key">🔒 private Client Secret — proves it's your app</span></li>
+          <li class="step"><span class="num">5</span><h3>Google returns the user's identity</h3><p>Google hands back the verified profile (email, name). The app matches or creates a local account.</p></li>
+          <li class="step s-ok"><span class="num">✓</span><h3>User is logged in</h3><p>A local session starts — all without the app ever handling a Google password.</p><span class="pill ok">● session created</span></li>
+        </ol>
+      </section>
+
+      <section class="panel reveal d3">
+        <div class="panel-head"><span class="panel-tag">What you do</span></div>
+        <h2>Run it yourself</h2>
+        <p class="panel-sub">Get one public key, one private key, and one exact-match redirect URL from Google.</p>
+        <ol class="setup-list">
+          <li>In <strong>Google Cloud Console → Google Auth Platform → Clients</strong>, create an OAuth client of type <em>Web application</em>.</li>
+          <li>Copy the <strong>Client ID</strong> (public) and <strong>Client Secret</strong> (private).</li>
+          <li>Register an <strong>Authorized redirect URI</strong> — it must match <em>exactly</em>: scheme, host, port, path, no trailing slash.</li>
+          <li>Put the three values where the app runs ↓</li>
+        </ol>
+        <div class="toggle" role="tablist" aria-label="Where you are running the app">
+          <button class="t-btn" role="tab" data-target="local" aria-selected="true">Local machine</button>
+          <button class="t-btn" role="tab" data-target="render" aria-selected="false">Render.com</button>
+        </div>
+        <div class="env" data-env="local">
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">.env</span><span class="where">copied from .env.example</span></div>
+          <div class="env-body"><span class="c"># public id is fine to expose; never commit the secret</span><br><span class="k">GOOGLE_CLIENT_ID</span><span class="eq">=</span><span class="v">your-id.apps.googleusercontent.com</span><br><span class="k">GOOGLE_CLIENT_SECRET</span><span class="eq">=</span><span class="secret">your-client-secret</span><br><span class="k">GOOGLE_REDIRECT_URI</span><span class="eq">=</span><span class="v">http://localhost:3001/auth/google/callback</span></div>
+        </div>
+        <div class="env" data-env="render" hidden>
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">Service → Environment</span><span class="where">no .env uploaded</span></div>
+          <div class="env-body"><span class="c"># also add this exact URL in the Google console</span><br><span class="k">GOOGLE_CLIENT_ID</span><span class="eq"> → </span><span class="v">your-id.apps.googleusercontent.com</span><br><span class="k">GOOGLE_CLIENT_SECRET</span><span class="eq"> → </span><span class="secret">your-client-secret</span><br><span class="k">GOOGLE_REDIRECT_URI</span><span class="eq"> → </span><span class="v">https://your-app.onrender.com/auth/google/callback</span></div>
+        </div>
+        <div class="note amber"><span class="ic">⚠️</span><span>When you deploy, change <b>GOOGLE_REDIRECT_URI</b> <em>and</em> add that same URL to the allowed list back in the Google console. If the two don't match, Google rejects login with <code>redirect_uri_mismatch</code>.</span></div>
+      </section>
+    </div>
+
+    <footer class="foot reveal d3">
+      <div><div class="lab">Required variables</div><div class="vars" style="margin-top:8px"><code>GOOGLE_CLIENT_ID</code><code>GOOGLE_CLIENT_SECRET</code><code>GOOGLE_REDIRECT_URI</code></div></div>
+      <div style="text-align:right"><div class="lab">Optional</div><div class="vars" style="margin-top:8px;justify-content:flex-end"><code>OAUTH_HTTP_TIMEOUT=10</code></div></div>
+    </footer>
+
+    <nav class="pager">
+      <button class="prev-btn" data-goto="0">← Email Verification</button>
+      <span class="spacer"></span>
+      <button class="next-btn" data-goto="2">Next: Cloudflare CAPTCHA <span class="arrow">→</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ FEATURE 03 — CLOUDFLARE CAPTCHA ============ -->
+  <section class="feature" data-feature="2" hidden>
+    <header class="hero reveal d1">
+      <div class="hero-top">
+        <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
+        <span class="series">Feature <b>03</b> / 04 · Cloudflare CAPTCHA</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1>A human gate <em>before</em> the password check.</h1>
+          <p class="lede">Turnstile drops a human-check widget onto the login form using a <strong>public Site Key</strong>. On submit, the server confirms the result with Cloudflare using the <strong>private Secret Key</strong> — before it ever looks at a password.</p>
+        </div>
+        <div class="sig-rail">
+          <div class="widget" role="img" aria-label="A Cloudflare Turnstile widget showing a successful human check">
+            <div class="checkbox" aria-hidden="true"><span class="ring"></span>✓</div>
+            <div class="wtext"><b>Success!</b><small>Verified you're human</small></div>
+            <div class="wbrand" aria-hidden="true"><span class="cf"></span><small>Turnstile</small></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel reveal d2">
+        <div class="panel-head"><span class="panel-tag">What happens</span></div>
+        <h2>The CAPTCHA flow</h2>
+        <p class="panel-sub">Where the widget sits in the login path, and which key does what.</p>
+        <ol class="flow">
+          <li class="step"><span class="num">1</span><h3>Login page renders the widget</h3><p>Using the <strong>public Site Key</strong>, Turnstile draws its widget on the login form (often passing invisibly for real users).</p><span class="pill pub">🌐 public Site Key — in the page</span></li>
+          <li class="step"><span class="num">2</span><h3>User passes the human check</h3><p>Turnstile runs its checks and hands the browser a one-time <strong>response token</strong>.</p></li>
+          <li class="step"><span class="num">3</span><h3>User submits the login form</h3><p>The form posts the username and password together with that Turnstile token.</p></li>
+          <li class="step s-key"><span class="num">4</span><h3>Server verifies with Cloudflare first</h3><p>Before any password check, the server sends the token <strong>plus the private Secret Key</strong> to Cloudflare's <code>siteverify</code> endpoint.</p><span class="pill key">🔒 Secret Key — server only</span></li>
+          <li class="step"><span class="num">5</span><h3>Cloudflare answers</h3><p>Valid → continue to the password check. Invalid → reject the attempt before credentials are ever read.</p></li>
+          <li class="step s-ok"><span class="num">✓</span><h3>Then — and only then — the password is checked</h3><p>The human gate sits strictly in front of authentication.</p><span class="pill ok">● gate cleared</span></li>
+        </ol>
+      </section>
+
+      <section class="panel reveal d3">
+        <div class="panel-head"><span class="panel-tag">What you do</span></div>
+        <h2>Run it yourself</h2>
+        <p class="panel-sub">Free, no domain needed. Grab a public Site Key and a private Secret Key.</p>
+        <ol class="setup-list">
+          <li>Go to <strong>dash.cloudflare.com → Turnstile → Add widget</strong>.</li>
+          <li>Set <strong>Hostname</strong> to <code>localhost</code> (add your real domain for production); choose <em>Managed</em> mode.</li>
+          <li>Copy the <strong>Site Key</strong> (public) and <strong>Secret Key</strong> (private).</li>
+          <li>Put both where the app runs ↓</li>
+        </ol>
+        <div class="toggle" role="tablist" aria-label="Where you are running the app">
+          <button class="t-btn" role="tab" data-target="local" aria-selected="true">Local machine</button>
+          <button class="t-btn" role="tab" data-target="render" aria-selected="false">Render.com</button>
+        </div>
+        <div class="env" data-env="local">
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">.env</span><span class="where">hostname: localhost</span></div>
+          <div class="env-body"><span class="c"># site key is public; never commit the secret</span><br><span class="k">TURNSTILE_SITE_KEY</span><span class="eq">=</span><span class="v">your-turnstile-site-key</span><br><span class="k">TURNSTILE_SECRET_KEY</span><span class="eq">=</span><span class="secret">your-turnstile-secret-key</span></div>
+        </div>
+        <div class="env" data-env="render" hidden>
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">Service → Environment</span><span class="where">add onrender.com host</span></div>
+          <div class="env-body"><span class="c"># add your onrender.com hostname in the Turnstile widget</span><br><span class="k">TURNSTILE_SITE_KEY</span><span class="eq"> → </span><span class="v">your-turnstile-site-key</span><br><span class="k">TURNSTILE_SECRET_KEY</span><span class="eq"> → </span><span class="secret">your-turnstile-secret-key</span></div>
+        </div>
+        <div class="note green"><span class="ic">✅</span><span><b>Optional &amp; safe:</b> leave both unset and the widget simply doesn't appear — login works exactly as before (graceful degrade).</span></div>
+        <div class="note amber"><span class="ic">🛟</span><span><b>Fails open:</b> if the keys are set but Cloudflare can't be reached, login is allowed through, so a Cloudflare outage can't lock everyone out.</span></div>
+      </section>
+    </div>
+
+    <footer class="foot reveal d3">
+      <div><div class="lab">Required variables</div><div class="vars" style="margin-top:8px"><code>TURNSTILE_SITE_KEY</code><code>TURNSTILE_SECRET_KEY</code></div></div>
+      <div style="text-align:right"><div class="lab">Optional</div><div class="vars" style="margin-top:8px;justify-content:flex-end"><code>TURNSTILE_HTTP_TIMEOUT=10</code></div></div>
+    </footer>
+
+    <nav class="pager">
+      <button class="prev-btn" data-goto="1">← Continue with Google</button>
+      <span class="spacer"></span>
+      <button class="next-btn" data-goto="3">Next: QR Login <span class="arrow">→</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ FEATURE 04 — QR LOGIN ============ -->
+  <section class="feature" data-feature="3" hidden>
+    <header class="hero reveal d1">
+      <div class="hero-top">
+        <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
+        <span class="series">Feature <b>04</b> / 04 · QR Login</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1>Scan from a signed-in device, <em>skip</em> the password.</h1>
+          <p class="lede">An unauthenticated browser shows a QR. A device that's already signed in scans and approves it — and the first browser logs straight in. No email, no Google, no extra dependency.</p>
+        </div>
+        <div class="sig-rail qr">
+          <div class="qr-card" role="img" aria-label="A login QR code, valid for 120 seconds">
+            <svg viewBox="0 0 110 110" aria-hidden="true">
+              <rect x="0" y="0" width="110" height="110" rx="8" fill="#fbfcff"/>
+              <g fill="currentColor">
+                <rect x="5" y="5" width="35" height="35"/><rect x="10" y="10" width="25" height="25" fill="#fbfcff"/><rect x="15" y="15" width="15" height="15"/>
+                <rect x="70" y="5" width="35" height="35"/><rect x="75" y="10" width="25" height="25" fill="#fbfcff"/><rect x="80" y="15" width="15" height="15"/>
+                <rect x="5" y="70" width="35" height="35"/><rect x="10" y="75" width="25" height="25" fill="#fbfcff"/><rect x="15" y="80" width="15" height="15"/>
+                <rect x="50" y="5" width="5" height="5"/><rect x="60" y="5" width="5" height="5"/><rect x="50" y="15" width="5" height="5"/>
+                <rect x="55" y="20" width="5" height="5"/><rect x="65" y="15" width="5" height="5"/><rect x="50" y="30" width="5" height="5"/>
+                <rect x="50" y="40" width="5" height="5"/><rect x="60" y="35" width="5" height="5"/><rect x="70" y="45" width="5" height="5"/>
+                <rect x="80" y="45" width="5" height="5"/><rect x="90" y="50" width="5" height="5"/><rect x="75" y="55" width="5" height="5"/>
+                <rect x="85" y="55" width="5" height="5"/><rect x="95" y="60" width="5" height="5"/><rect x="50" y="55" width="5" height="5"/>
+                <rect x="55" y="60" width="5" height="5"/><rect x="45" y="65" width="5" height="5"/><rect x="50" y="75" width="5" height="5"/>
+                <rect x="60" y="70" width="5" height="5"/><rect x="70" y="75" width="5" height="5"/><rect x="80" y="70" width="5" height="5"/>
+                <rect x="90" y="80" width="5" height="5"/><rect x="60" y="85" width="5" height="5"/><rect x="70" y="90" width="5" height="5"/>
+                <rect x="50" y="95" width="5" height="5"/><rect x="75" y="100" width="5" height="5"/><rect x="85" y="95" width="5" height="5"/>
+                <rect x="45" y="85" width="5" height="5"/><rect x="95" y="95" width="5" height="5"/>
+              </g>
+              <rect class="qr-scanline" x="5" y="53" width="100" height="3" rx="1.5" fill="var(--brand)"/>
+            </svg>
+            <span class="scan">Scan to log in</span>
+            <span class="qr-chip">⏱ valid 120s · polls every 2s</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel reveal d2">
+        <div class="panel-head"><span class="panel-tag">What happens</span></div>
+        <h2>The QR login flow</h2>
+        <p class="panel-sub">How a waiting browser and an already-trusted device hand off a session.</p>
+        <ol class="flow">
+          <li class="step s-time"><span class="num">1</span><h3>Browser shows a QR on /login</h3><p>An unauthenticated browser displays a QR encoding a short-lived login request, then quietly polls the server — <em>“approved yet?”</em> — on an interval.</p><span class="pill time">⏱ QR valid 120s · poll every 2s</span></li>
+          <li class="step"><span class="num">2</span><h3>An already-signed-in device scans it</h3><p>A phone — or a second browser that's already logged in — opens the link the QR encodes.</p></li>
+          <li class="step"><span class="num">3</span><h3>The signed-in device approves</h3><p>The user taps approve. The server marks <strong>that specific login request</strong> as approved.</p></li>
+          <li class="step"><span class="num">4</span><h3>The waiting browser sees the approval</h3><p>On its next poll, the first browser picks up the new <em>“approved”</em> status.</p></li>
+          <li class="step s-ok"><span class="num">✓</span><h3>The first browser logs in</h3><p>A session starts on the waiting browser — no password typed anywhere.</p><span class="pill ok">● session created</span></li>
+        </ol>
+      </section>
+
+      <section class="panel reveal d3">
+        <div class="panel-head"><span class="panel-tag">What you do</span></div>
+        <h2>Run it yourself</h2>
+        <p class="panel-sub">The easiest of the four — it works on a fresh clone. You only adjust reachability for a real scan.</p>
+        <ol class="setup-list">
+          <li><strong>Nothing required</strong> — works on a fresh clone with the defaults.</li>
+          <li>For a real phone scan, point <strong>APP_BASE_URL</strong> at an address the scanning device can reach — your LAN IP or your Render URL, <em>not</em> localhost.</li>
+          <li>On one machine, “scan” by opening the QR's link in a <strong>second, already-logged-in browser</strong>.</li>
+          <li>Optionally tune the timing values ↓</li>
+        </ol>
+        <div class="toggle" role="tablist" aria-label="Where you are running the app">
+          <button class="t-btn" role="tab" data-target="local" aria-selected="true">Local machine</button>
+          <button class="t-btn" role="tab" data-target="render" aria-selected="false">Render.com</button>
+        </div>
+        <div class="env" data-env="local">
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">.env</span><span class="where">all optional</span></div>
+          <div class="env-body"><span class="c"># defaults shown — use a LAN IP so a phone can reach it</span><br><span class="k">APP_BASE_URL</span><span class="eq">=</span><span class="v">http://192.168.1.20:3001</span><br><span class="k">QR_LOGIN_TTL_SECONDS</span><span class="eq">=</span><span class="v">120</span><br><span class="k">QR_LOGIN_POLL_INTERVAL_SECONDS</span><span class="eq">=</span><span class="v">2</span></div>
+        </div>
+        <div class="env" data-env="render" hidden>
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">Service → Environment</span><span class="where">public URL reachable</span></div>
+          <div class="env-body"><span class="c"># the public Render URL is reachable by any phone</span><br><span class="k">APP_BASE_URL</span><span class="eq"> → </span><span class="v">https://your-app.onrender.com</span><br><span class="k">QR_LOGIN_TTL_SECONDS</span><span class="eq"> → </span><span class="v">120</span><br><span class="k">QR_LOGIN_POLL_INTERVAL_SECONDS</span><span class="eq"> → </span><span class="v">2</span></div>
+        </div>
+        <div class="note green"><span class="ic">✅</span><span><b>Zero setup:</b> needs no SendGrid, no Google, and no extra dependency — it runs out of the box on a fresh clone.</span></div>
+        <div class="note amber"><span class="ic">📱</span><span><b>localhost on a phone means the phone itself.</b> For a real cross-device scan, use a LAN IP or your public URL in <code>APP_BASE_URL</code>.</span></div>
+      </section>
+    </div>
+
+    <footer class="foot reveal d3">
+      <div><div class="lab">Required variables</div><div class="vars" style="margin-top:8px"><code class="ok-code">none — works on a fresh clone</code></div></div>
+      <div style="text-align:right"><div class="lab">Optional</div><div class="vars" style="margin-top:8px;justify-content:flex-end"><code>APP_BASE_URL</code><code>QR_LOGIN_TTL_SECONDS=120</code><code>QR_LOGIN_POLL_INTERVAL_SECONDS=2</code></div></div>
+    </footer>
+
+    <nav class="pager">
+      <button class="prev-btn" data-goto="2">← Cloudflare CAPTCHA</button>
+      <span class="spacer"></span>
+      <button class="next-btn restart" data-goto="0"><span class="ico">↺</span> Back to start</button>
+    </nav>
+  </section>
+
+</div>
+
+<script>
+  const features = Array.from(document.querySelectorAll('.feature'));
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function show(i){
+    i = (i + features.length) % features.length;
+    features.forEach((f, idx) => {
+      const active = idx === i;
+      f.hidden = !active;
+      if (active){
+        f.classList.remove('in');      // restart the fade
+        void f.offsetWidth;            // force reflow
+        f.classList.add('in');
+      }
+    });
+    tabs.forEach((t, idx) => t.setAttribute('aria-selected', String(idx === i)));
+    if (!prefersReduced) window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // any element with data-goto navigates
+  document.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => show(parseInt(el.dataset.goto, 10)));
+  });
+
+  // Local / Render toggles, scoped per feature
+  document.querySelectorAll('.toggle').forEach(group => {
+    const btns = Array.from(group.querySelectorAll('.t-btn'));
+    const feature = group.closest('.feature');
+    btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        btns.forEach(b => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        const target = btn.dataset.target;
+        feature.querySelectorAll('.env').forEach(env => {
+          env.hidden = env.dataset.env !== target;
+        });
+      });
+    });
+  });
+</script>
+</body>
+</html>
