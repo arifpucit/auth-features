@@ -120,6 +120,18 @@
   .qr-scanline{animation:scan 2.6s ease-in-out infinite;transform-origin:center}
   @keyframes scan{0%,100%{transform:translateY(-46px);opacity:.15}50%{transform:translateY(46px);opacity:.7}}
 
+  /* signature: authenticator app code card (F5) */
+  .auth-card{background:#fbfcff;border-radius:14px;box-shadow:0 14px 34px rgba(0,0,0,.34);padding:16px 18px;display:flex;align-items:center;gap:16px;max-width:100%}
+  .auth-card .ameta{flex:1;min-width:0}
+  .auth-card .issuer{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+  .auth-card .acct{font-size:12px;color:var(--ink-2);margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .auth-card .code{font-family:var(--mono);font-weight:700;font-size:30px;letter-spacing:.1em;color:var(--brand-ink);line-height:1}
+  .auth-ring{width:46px;height:46px;flex:0 0 auto;transform:rotate(-90deg)}
+  .auth-ring circle{fill:none;stroke-width:5}
+  .auth-ring .track{stroke:#e7ecf5}
+  .auth-ring .prog{stroke:var(--brand);stroke-linecap:round;stroke-dasharray:113.1;animation:countdown 30s linear infinite}
+  @keyframes countdown{from{stroke-dashoffset:0}to{stroke-dashoffset:113.1}}
+
   /* ---------- PANELS ---------- */
   .grid{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px}
   .panel{background:var(--panel);border-radius:calc(var(--r) + 4px);box-shadow:var(--shadow);padding:clamp(18px,2.4vw,28px);border:1px solid #fff}
@@ -202,7 +214,7 @@
   }
   @media (prefers-reduced-motion:reduce){
     .reveal,.feature.in{animation:none;opacity:1;transform:none}
-    .send-dot,.widget .checkbox .ring,.qr-scanline{animation:none}
+    .send-dot,.widget .checkbox .ring,.qr-scanline,.auth-ring .prog{animation:none}
   }
 </style>
 </head>
@@ -217,6 +229,7 @@
       <button class="tab" role="tab" data-goto="1" aria-selected="false"><b>02</b> Google</button>
       <button class="tab" role="tab" data-goto="2" aria-selected="false"><b>03</b> CAPTCHA</button>
       <button class="tab" role="tab" data-goto="3" aria-selected="false"><b>04</b> QR Login</button>
+      <button class="tab" role="tab" data-goto="4" aria-selected="false"><b>05</b> Authenticator</button>
     </nav>
   </div>
 
@@ -225,7 +238,7 @@
     <header class="hero reveal d1">
       <div class="hero-top">
         <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
-        <span class="series">Feature <b>01</b> / 04 · Email Verification</span>
+        <span class="series">Feature <b>01</b> / 05 · Email Verification</span>
       </div>
       <div class="hero-main">
         <div class="hero-copy">
@@ -309,7 +322,7 @@
     <header class="hero reveal d1">
       <div class="hero-top">
         <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
-        <span class="series">Feature <b>02</b> / 04 · Continue with Google</span>
+        <span class="series">Feature <b>02</b> / 05 · Continue with Google</span>
       </div>
       <div class="hero-main">
         <div class="hero-copy">
@@ -385,7 +398,7 @@
     <header class="hero reveal d1">
       <div class="hero-top">
         <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
-        <span class="series">Feature <b>03</b> / 04 · Cloudflare CAPTCHA</span>
+        <span class="series">Feature <b>03</b> / 05 · Cloudflare CAPTCHA</span>
       </div>
       <div class="hero-main">
         <div class="hero-copy">
@@ -461,7 +474,7 @@
     <header class="hero reveal d1">
       <div class="hero-top">
         <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
-        <span class="series">Feature <b>04</b> / 04 · QR Login</span>
+        <span class="series">Feature <b>04</b> / 05 · QR Login</span>
       </div>
       <div class="hero-main">
         <div class="hero-copy">
@@ -544,6 +557,88 @@
 
     <nav class="pager">
       <button class="prev-btn" data-goto="2">← Cloudflare CAPTCHA</button>
+      <span class="spacer"></span>
+      <button class="next-btn" data-goto="4">Next: Authenticator app <span class="arrow">→</span></button>
+    </nav>
+  </section>
+
+  <!-- ============ FEATURE 05 — AUTHENTICATOR APP (TOTP) ============ -->
+  <section class="feature" data-feature="4" hidden>
+    <header class="hero reveal d1">
+      <div class="hero-top">
+        <span class="eyebrow"><span class="dot"></span>Security Vulnerability Lab</span>
+        <span class="series">Feature <b>05</b> / 05 · Authenticator App (TOTP)</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-copy">
+          <h1>Something you <em>have</em> — a code that rotates every 30 seconds.</h1>
+          <p class="lede">At enrollment the server and your authenticator app agree on one <strong>shared secret</strong>. At login a correct password isn't enough — you must enter the 6-digit code the app derives from that secret and the current time. No SendGrid, no Google, works offline.</p>
+        </div>
+        <div class="sig-rail">
+          <div class="auth-card" role="img" aria-label="An authenticator app showing a six digit code that expires in 30 seconds">
+            <div class="ameta">
+              <div class="issuer">Security Vulnerability Lab</div>
+              <div class="acct">alice@example.com</div>
+              <div class="code">482&nbsp;159</div>
+            </div>
+            <svg class="auth-ring" viewBox="0 0 46 46" aria-hidden="true">
+              <circle class="track" cx="23" cy="23" r="18"></circle>
+              <circle class="prog" cx="23" cy="23" r="18"></circle>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="panel reveal d2">
+        <div class="panel-head"><span class="panel-tag">What happens</span></div>
+        <h2>The authenticator (TOTP) flow</h2>
+        <p class="panel-sub">A one-time enrollment, then a time-based code at every login — and the shared secret behind it.</p>
+        <ol class="flow">
+          <li class="step"><span class="num">1</span><h3>User enrolls the authenticator</h3><p>From their profile they enable TOTP. The server generates a random <strong>160-bit secret</strong> and shows it as a QR code (an <code>otpauth://</code> link carrying the issuer label, 6 digits, and a 30s period).</p></li>
+          <li class="step s-key"><span class="num">2</span><h3>The app scans &amp; stores the secret</h3><p>Google Authenticator or Authy saves it. Now <strong>both sides hold the same secret</strong> — and it never travels over the network again.</p><span class="pill key">🔑 shared secret — symmetric, held by both</span></li>
+          <li class="step"><span class="num">3</span><h3>At login, password first</h3><p>The user enters username and password as usual.</p></li>
+          <li class="step s-key"><span class="num">4</span><h3>A correct password triggers a TOTP challenge</h3><p>Instead of logging in, the server asks for the current 6-digit code — the <strong>second factor</strong>.</p><span class="pill key">🔒 second factor — something you have</span></li>
+          <li class="step s-time"><span class="num">5</span><h3>User enters the rotating code</h3><p>The app computes it locally as <code>HMAC(secret, time-step)</code> — no internet needed — and it changes every 30 seconds.</p><span class="pill time">⏱ rotates every 30s</span></li>
+          <li class="step s-ok"><span class="num">✓</span><h3>Server checks the code against secret + time</h3><p>It recomputes the expected code from the shared secret and current time-step, allowing ±1 step of clock drift. Match → login completes.</p><span class="pill ok">● second factor cleared</span></li>
+        </ol>
+      </section>
+
+      <section class="panel reveal d3">
+        <div class="panel-head"><span class="panel-tag">What you do</span></div>
+        <h2>Run it yourself</h2>
+        <p class="panel-sub">Like QR login, it works on a fresh clone. You just need a phone app to test, plus optional tuning.</p>
+        <ol class="setup-list">
+          <li><strong>Nothing required</strong> — needs no SendGrid and no Google; works out of the box.</li>
+          <li>Install an <strong>authenticator app</strong> (Google Authenticator, Authy, …) to actually test it.</li>
+          <li>Enroll from your profile, <strong>scan the QR</strong>, then log in and enter a code.</li>
+          <li>Optionally tune the label and drift tolerance ↓</li>
+        </ol>
+        <div class="toggle" role="tablist" aria-label="Where you are running the app">
+          <button class="t-btn" role="tab" data-target="local" aria-selected="true">Local machine</button>
+          <button class="t-btn" role="tab" data-target="render" aria-selected="false">Render.com</button>
+        </div>
+        <div class="env" data-env="local">
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">.env</span><span class="where">all optional</span></div>
+          <div class="env-body"><span class="c"># defaults shown — these only tune the label &amp; drift</span><br><span class="k">TOTP_ISSUER</span><span class="eq">=</span><span class="v">Security Vulnerability Lab</span><br><span class="k">TOTP_PERIOD_SECONDS</span><span class="eq">=</span><span class="v">30</span><br><span class="k">TOTP_SKEW_STEPS</span><span class="eq">=</span><span class="v">1</span></div>
+        </div>
+        <div class="env" data-env="render" hidden>
+          <div class="env-bar"><span class="dotrow"><i></i><i></i><i></i></span><span class="fname">Service → Environment</span><span class="where">optional tuning</span></div>
+          <div class="env-body"><span class="c"># code length (6) and secret size (160-bit) are fixed</span><br><span class="k">TOTP_ISSUER</span><span class="eq"> → </span><span class="v">Security Vulnerability Lab</span><br><span class="k">TOTP_PERIOD_SECONDS</span><span class="eq"> → </span><span class="v">30</span><br><span class="k">TOTP_SKEW_STEPS</span><span class="eq"> → </span><span class="v">1</span></div>
+        </div>
+        <div class="note green"><span class="ic">✅</span><span><b>Zero setup &amp; offline:</b> codes are computed locally on both sides from the shared secret, so no SMTP, no Google, and no network call to the phone.</span></div>
+        <div class="note amber"><span class="ic">⏱</span><span><b>Clock drift:</b> if a phone's clock is off, codes can fail. <code>TOTP_SKEW_STEPS</code> allows ±1 time-step (≈±30s) of tolerance.</span></div>
+      </section>
+    </div>
+
+    <footer class="foot reveal d3">
+      <div><div class="lab">Required variables</div><div class="vars" style="margin-top:8px"><code class="ok-code">none — works on a fresh clone</code></div></div>
+      <div style="text-align:right"><div class="lab">Optional</div><div class="vars" style="margin-top:8px;justify-content:flex-end"><code>TOTP_ISSUER</code><code>TOTP_PERIOD_SECONDS=30</code><code>TOTP_SKEW_STEPS=1</code></div></div>
+    </footer>
+
+    <nav class="pager">
+      <button class="prev-btn" data-goto="3">← QR Login</button>
       <span class="spacer"></span>
       <button class="next-btn restart" data-goto="0"><span class="ico">↺</span> Back to start</button>
     </nav>
